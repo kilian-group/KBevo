@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "question": "In addition to his puppeteering on The Dark Crystal, Dave Goelz is known for performing as which Muppet?",
+  "contexts": [
+    "Dave Goelz is an American puppeteer best known for his work with the Muppets. He performed The Great Gonzo, Bunsen Honeydew, Zoot, and Waldorf.",
+    "The Dark Crystal is a 1982 American-British fantasy film directed by Jim Henson and Frank Oz. Dave Goelz was one of the film's puppeteers.",
+    "The Great Gonzo, also known as Gonzo the Great, is a Muppet character who has been performed by Dave Goelz since 1976.",
+    "Sesame Street is an American educational children's television series created by Joan Ganz Cooney and Lloyd Morrisett."
+  ],
+  "answer": "The Great Gonzo",
+  "phase1_kb": [
+    ["Dave Goelz", "known for performing", "work with the Muppets"],
+    ["Dave Goelz", "Muppet character", "The Great Gonzo"],
+    ["The Great Gonzo", "performed by", "Dave Goelz"]
+  ],
+  "phase2_tool_trace": [
+    {
+      "entity": "Dave Goelz",
+      "relationship": "Muppet performer",
+      "retrieved_value": "The Great Gonzo",
+      "score": 0.87
+    }
+  ],
+  "raw_trace": [
+    {
+      "prompt": "...phase-2 prompt with the question and passages...",
+      "answer": "...phase-2 model response containing <answer>The Great Gonzo</answer>...",
+      "action": "generate",
+      "error": null,
+      "tool_name": null,
+      "tool_args": null,
+      "tool_result": null,
+      "golden_triplets": null
+    }
+  ],
+  "model_path": "kilian-group/KBevo-Qwen3-1.7B-GRPO"
+}

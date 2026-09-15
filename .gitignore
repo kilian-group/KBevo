@@ -1,0 +1,37 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Package build artifacts
+*.egg-info/
+
+# Runtime outputs (recreated by eval / training)
+ckpts/
+output/
+results/
+mlruns/
+wandb/
+
+# SLURM logs / core dumps
+*.err
+*.out
+slurm/
+core
+
+# Downloaded SFT dataset (kilian-group/KBevo-SFT-hotpotqa-6k)
+data/sft/
+
+# Large retrieval / embedding artifacts (regenerable)
+*.index
+*.faiss
+*.npy
+
+# Runtime KB embedding cache (auto-populated by topk_retriever)
+database_cache/
+
+# Site-specific cluster/path config (copy from configs/cluster.env.example)
+configs/cluster.env
+
+# Generated per-run output of examples/single_example.py
+examples/single_example_output.json

@@ -1,0 +1,73 @@
+# KBevo — SFT configuration for Qwen3-1.7B (paper §5, Appendix B.1).
+#
+# Authoritative source: the KBevo paper (arXiv:2608.26386, COLM 2026),
+# Appendix B.1 "Training details". Values here match what
+# `scripts/train_sft.sh --model_size 1.7B` actually launches.
+
+recipe_name: kbevo_sft_qwen3_1.7b
+paper: https://arxiv.org/abs/2608.26386
+paper_section: "Appendix B.1"
+
+model:
+  base_model: Qwen/Qwen3-1.7B
+  # `resume_from_checkpoint` in HF Trainer is set to the base model so tokenizer
+  # + weights load cleanly; there is no separate init step.
+  initialized_from: Qwen/Qwen3-1.7B
+
+data:
+  dataset: hotpotqa
+  # Released as `kilian-group/KBevo-SFT-hotpotqa-6k` on the Hugging Face Hub.
+  # See configs/artifacts.yaml for its status.
+  dataset_repo_hint: kilian-group/KBevo-SFT-hotpotqa-6k
+  train_examples: 11746            # examples in the released JSON (dedup ≈ 5744 unique HotpotQA questions)
+  eval_examples: null              # eval_strategy=epoch, dataset's built-in validation split
+  two_phase_supervision: true      # implicit — trajectories already contain <|db_*|> tokens
+
+seed: 42                            # HF Trainer default seed for SFT runs
+
+optimizer:
+  learning_rate: 5.0e-5
+  weight_decay: 0.01
+  lr_scheduler_type: cosine
+  warmup_ratio: 0.1
+  max_grad_norm: 1.0                # HF Trainer default
+
+batching:
+  per_device_train_batch_size: 24
+  gradient_accumulation_steps: 2
+  num_gpus_paper: 1                 # site-specific in effect
+  effective_batch_size: 48          # = 24 * 2 * 1
+
+epochs_or_steps:
+  num_train_epochs: 3
+  steps_per_epoch: 245              # ≈ 11746 / 48 (rounded down at trainer)
+  approx_total_steps: 735
+
+precision:
+  bf16: true
+  gradient_checkpointing: false     # paper Table 5: "–" for SFT (only GRPO enables it)
+
+sequence_lengths:
+  max_seq_length: 2048
+
+tokenizer:
+  use_special_dblookup_tokens: true # adds <|db_entity|>, <|db_relationship|>, <|db_return|>, <|db_end|>
+  plain_baseline: false
+
+logging_and_checkpointing:
+  logging_steps: 10
+  eval_strategy: epoch
+  save_strategy: steps
+  save_steps: 0.125                 # every 12.5% of training
+  save_total_limit: 8
+  save_only_model: true             # smaller checkpoints; no optimizer state
+
+runtime:                            # site-specific; not part of the scientific recipe
+  num_gpus: 1
+  wrapper_script: scripts/train_sft.sh
+  wrapper_command: "bash scripts/train_sft.sh --model_size 1.7B --dataset_path <path>"
+
+released_checkpoint:
+  hf_repo: kilian-group/KBevo-Qwen3-1.7B-SFT
+  precision: bfloat16
+  paper_reported_step: 368          # 4B GRPO init is step 735; 1.7B GRPO init is step 368

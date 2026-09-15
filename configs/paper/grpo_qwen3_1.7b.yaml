@@ -1,0 +1,98 @@
+# KBevo — two-phase GRPO configuration for Qwen3-1.7B (paper §5, Appendix B.1).
+#
+# Authoritative source: the KBevo paper (arXiv:2608.26386, COLM 2026),
+# Appendix B.1 "Training details". Values here match what
+# `scripts/train_grpo.sh --model_size 1.7B` actually launches, i.e. the
+# wrapper's canonical `set --` block plus the body's B200 preset for 1.7B.
+
+recipe_name: kbevo_grpo_qwen3_1.7b_two_phase
+paper: https://arxiv.org/abs/2608.26386
+paper_section: "Appendix B.1"
+
+model:
+  base_model: Qwen/Qwen3-1.7B
+  # GRPO initializes from an intermediate SFT checkpoint (paper Table 5).
+  initialized_from: kilian-group/KBevo-Qwen3-1.7B-SFT
+
+data:
+  dataset: hotpotqa
+  train_examples: 7000
+  eval_examples: 100
+  # Two-phase mode does NOT read a pre-built database at rollout time; the
+  # DB is constructed per question during Phase-1 rollouts.
+  database_path: ""
+
+seed: 42
+
+optimizer:
+  learning_rate: 5.0e-6             # B200-preset override; wrapper body default 1e-6 is superseded
+  lr_scheduler_type: cosine
+  warmup_ratio: 0.1
+  max_grad_norm: 1.0
+  beta: 0.0                         # GRPO KL coefficient — paper uses 0
+
+batching:
+  per_device_train_batch_size: 16
+  gradient_accumulation_steps: 8    # derived: 512 / (16 * 4)
+  num_gpus_paper: 4
+  effective_batch_size: 512         # optimizer batch — NOT rollout total
+
+epochs_or_steps:
+  max_steps: 500
+  num_train_epochs: 100             # ceiling only; max_steps takes effect first
+
+rollouts:
+  N_phase2_qa_per_question: 32      # --num_generations
+  K_phase1_kb_per_question: 4       # --num_db_rollouts
+  M_qa_per_kb: 8                    # derived: N / K
+  total_generations_per_question: 36  # K + N
+  max_completion_length: 1024
+
+sampling:
+  temperature: 1.0
+  top_p: 0.95
+  sampling_top_k: 4                 # vLLM sampling top_k, distinct from retrieval top_k
+
+retrieval:
+  retrieval_threshold: 0.6
+  retrieval_top_k: 4
+  use_inverses: true
+  adaptive_k: false
+
+phase1:
+  two_phase: true                   # KBevo canonical: phase-1 KB + phase-2 QA
+  phase1_prompt_type: sft           # phase-1 prompt is the SFT trajectory format
+  phase1_reward_type: binary
+  phase1_db_weight_mode: count
+
+reward:
+  reward_func: f1
+
+precision:
+  bf16: true                        # HF Trainer defaults; released weights are BF16
+  gradient_checkpointing: true
+
+vllm:
+  use_vllm: true
+  vllm_mode: colocate
+  vllm_gpu_memory_utilization: 0.4  # B200-preset override for 1.7B
+  vllm_max_model_length: 4096
+
+logging_and_checkpointing:
+  logging_steps: 5
+  save_strategy: steps
+  save_steps: 25
+  save_total_limit: 5
+  eval_strategy: steps
+  eval_steps: 100
+
+runtime:                            # site-specific; not part of the scientific recipe
+  num_gpus: 4
+  gpu_type: B200
+  wrapper_script: scripts/train_grpo.sh
+  wrapper_command: "bash scripts/grpo_variants/train_two_phase_1.7b.slurm"
+
+released_checkpoint:
+  hf_repo: kilian-group/KBevo-Qwen3-1.7B-GRPO
+  precision: bfloat16
+  paper_reported_step: 500

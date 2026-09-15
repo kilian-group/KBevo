@@ -1,0 +1,106 @@
+# KBevo — released-artifact manifest.
+#
+# Single authoritative mapping of the artifacts that ship with the paper.
+# Read by tests, tooling and documentation; not consumed by any launcher.
+#
+# Licensing:
+#   * `code_license` covers the source in this repository (LICENSE, MIT).
+#   * `model_license` covers weights uploaded to the Hub (Apache-2.0, matching
+#     the Qwen3 base model). The two are intentionally distinct.
+#
+# All released model weights are BF16 (paper §5; verified on the Hub at
+# publication time).
+
+paper:
+  title: "Co-Evolving Structured Knowledge and Reasoning in Language Models"
+  venue: "COLM 2026"
+  url: https://arxiv.org/abs/2608.26386
+
+github:
+  # Public release lives at kilian-group/KBevo. Any other remote (e.g. a
+  # personal working fork) is a staging area and not the canonical URL.
+  url: https://github.com/kilian-group/KBevo
+
+hugging_face:
+  organization: kilian-group
+  collection_url: https://huggingface.co/collections/kilian-group/kbevo-6aa87f4fd519a8e5d76554ac
+
+licenses:
+  code_license: MIT                  # LICENSE at repo root
+  model_license: Apache-2.0          # released Qwen3 checkpoint weights
+
+precision: bfloat16                  # all four released model repos
+
+supported_eval_datasets:
+  - name: hotpotqa
+    setting: distractor
+    split: validation
+    loader: src/data/hotpotqa.py
+    paper_eval_size: 7405
+  - name: musique
+    split: validation
+    loader: src/data/musique.py
+    paper_eval_size: 2417
+  - name: 2wiki
+    split: validation
+    loader: src/data/two_wiki.py
+    paper_eval_size: 12576
+  - name: popqa
+    split: validation
+    loader: src/data/popqa.py
+    paper_eval_size: 1399
+
+models:
+  qwen3_1_7b_sft:
+    repo_id: kilian-group/KBevo-Qwen3-1.7B-SFT
+    revision: d4e3074fdd5b89ea13d944b579e9ba75b9a4cbac
+    stage: sft
+    base_model: Qwen/Qwen3-1.7B
+    paper_config: configs/paper/sft_qwen3_1.7b.yaml
+    precision: bfloat16
+    model_license: Apache-2.0
+
+  qwen3_1_7b_grpo:
+    repo_id: kilian-group/KBevo-Qwen3-1.7B-GRPO
+    revision: 9ce2172a2f2d3e580de7c2be4121dca211286b28
+    stage: grpo
+    initialized_from: kilian-group/KBevo-Qwen3-1.7B-SFT
+    initialized_from_step: 368     # 1.7B GRPO init is mid-training SFT step 368
+    paper_config: configs/paper/grpo_qwen3_1.7b.yaml
+    precision: bfloat16
+    model_license: Apache-2.0
+
+  qwen3_4b_sft:
+    repo_id: kilian-group/KBevo-Qwen3-4B-SFT
+    revision: d553fcf3bc7a41a203dcc92d0c3da6655aa6caef
+    stage: sft
+    base_model: Qwen/Qwen3-4B
+    paper_config: configs/paper/sft_qwen3_4b.yaml
+    precision: bfloat16
+    model_license: Apache-2.0
+
+  qwen3_4b_grpo:
+    repo_id: kilian-group/KBevo-Qwen3-4B-GRPO
+    revision: 98e07542621e0c1f6fbb94fc9167ff338eddb723
+    stage: grpo
+    initialized_from: kilian-group/KBevo-Qwen3-4B-SFT
+    initialized_from_step: 735     # 4B GRPO init is final SFT step 735
+    paper_config: configs/paper/grpo_qwen3_4b.yaml
+    precision: bfloat16
+    model_license: Apache-2.0
+
+datasets:
+  sft_hotpotqa_6k:
+    # Released and verified on the Hub. The dataset card declares
+    # `license: apache-2.0`; the upstream HotpotQA train terms should still
+    # be observed by downstream users.
+    repo_id: kilian-group/KBevo-SFT-hotpotqa-6k
+    revision: 22d8cc7d5b13c8c73bbafdeba18a5d6fa3eb088a
+    filename: trajectories.json        # the single JSON inside the repo
+    status: released_verified
+    data_license: apache-2.0
+    schema:
+      top_level: '{"examples": [...]}'
+      per_example_field: annotated_text
+      alternative_per_example_fields: ["format_version", "prompt", "answer"]
+      required_special_tokens: ["<|db_entity|>", "<|db_relationship|>", "<|db_return|>", "<|db_end|>"]

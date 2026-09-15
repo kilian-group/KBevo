@@ -1,0 +1,69 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kbevo"
+version = "0.1.0"
+description = "Official implementation of Co-Evolving Structured Knowledge and Reasoning in Language Models (COLM 2026)"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [
+    {name = "Ryan Thomas Noonan"},
+    {name = "Linxi Zhao"},
+    {name = "Menghan Xu"},
+    {name = "Akanksha Sarkar"},
+    {name = "Mihir Mishra"},
+    {name = "Dongyoung Go"},
+    {name = "Kilian Q. Weinberger"},
+    {name = "Yoav Artzi"},
+    {name = "Jennifer J. Sun"},
+]
+keywords = [
+    "kbevo", "qwen3", "multi-hop-reasoning", "knowledge-base",
+    "structured-knowledge", "grpo", "sft", "tool-use", "colm-2026",
+]
+
+# The authoritative dependency spec is `environment.yml` (conda env named `kbevo`).
+# The list below is the minimum needed for `pip install -e .` to succeed and
+# make the `src/` tree importable; it does NOT install the training / vLLM /
+# retrieval stack. To reproduce the paper environment, prefer:
+#     conda env create -f environment.yml
+dependencies = [
+    "torch>=2.8",
+    "transformers>=4.57",
+    "trl>=0.26",
+    "accelerate>=1.10",
+    "datasets>=3.1",
+    "huggingface_hub>=0.30",
+    "safetensors>=0.4",
+    "pandas>=1.5",
+    "tqdm>=4.65",
+    "jsonschema>=4.23",
+    "pydantic>=2.10",
+]
+
+[project.optional-dependencies]
+dev = [
+    "black>=23.0",
+    "ruff>=0.1",
+]
+
+[project.urls]
+Paper = "https://arxiv.org/abs/2608.26386"
+Repository = "https://github.com/kilian-group/KBevo"
+Collection = "https://huggingface.co/collections/kilian-group/kbevo-6aa87f4fd519a8e5d76554ac"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.black]
+line-length = 100
+target-version = ["py311", "py312"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+lint.select = ["E", "F", "I", "N", "W"]
+lint.ignore = ["E501"]

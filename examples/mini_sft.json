@@ -1,0 +1,34 @@
+{
+  "_meta": {
+    "purpose": "Tiny smoke set for schema + loader validation of scripts/train_sft.sh. NOT a training set.",
+    "current_schema_field": "annotated_text",
+    "current_schema_note": "The SFT loader (src/multi_lmlm/training/utils/load_sft_dataset.py:prepare_pretrain_data) reads `annotated_text` per example. The upstream (format_version, prompt, answer) fields are also included for forward-compatibility with a future schema; they are ignored by the current loader.",
+    "special_tokens": ["<|db_entity|>", "<|db_relationship|>", "<|db_return|>", "<|db_end|>"]
+  },
+  "examples": [
+    {
+      "format_version": 1,
+      "question": "Ohio State Route 362 runs near the edge of which State Park in Ft. Loramie, Ohio?",
+      "prompt": "Question:\nOhio State Route 362 runs near the edge of which State Park in Ft. Loramie, Ohio?\nAnswer:\n",
+      "answer": "Lake Loramie State Park",
+      "annotated_text": "Question:\nOhio State Route 362 runs near the edge of which State Park in Ft. Loramie, Ohio?\nAnswer:\n<thinking> The state park near Ohio State Route 362 in Ft. Loramie, Ohio is <|db_entity|> Ohio State Route 362 <|db_relationship|> runs near <|db_return|>1.1 mi east, westerly, northerly along the western edge of Lake Loramie State Park, northwesterly<|db_end|> Lake Loramie State Park. </thinking> <answer> Lake Loramie State Park </answer>",
+      "golden_answer": ["Lake Loramie State Park"]
+    },
+    {
+      "format_version": 1,
+      "question": "In addition to his puppeteering on The Dark Crystal, Dave Goelz is known for performing as which Muppet?",
+      "prompt": "Question:\nIn addition to his puppeteering on The Dark Crystal, Dave Goelz is known for performing as which Muppet?\nAnswer:\n",
+      "answer": "The Great Gonzo",
+      "annotated_text": "Question:\nIn addition to his puppeteering on The Dark Crystal, Dave Goelz is known for performing as which Muppet?\nAnswer:\n<thinking> The user is asking to identify a Muppet performed by Dave Goelz, other than his work on The Dark Crystal. <|db_entity|> Dave Goelz <|db_relationship|> known for performing <|db_return|>work with the Muppets<|db_end|> work with the Muppets. <|db_entity|> Dave Goelz <|db_relationship|> Muppet performer <|db_return|>The Great Gonzo<|db_end|> The Great Gonzo. Dave Goelz is known for performing as The Great Gonzo. </thinking> <answer> The Great Gonzo </answer>",
+      "golden_answer": ["The Great Gonzo"]
+    },
+    {
+      "format_version": 1,
+      "question": "Which company is based in Europe, PNC Financial Services or Covidien?",
+      "prompt": "Question:\nWhich company is based in Europe, PNC Financial Services or Covidien?\nAnswer:\n",
+      "answer": "Covidien",
+      "annotated_text": "Question:\nWhich company is based in Europe, PNC Financial Services or Covidien?\nAnswer:\n<thinking> I need to determine which of the two companies, PNC Financial Services or Covidien, is based in Europe. <|db_entity|> PNC Financial Services <|db_relationship|> location <|db_return|>Pittsburgh<|db_end|> Pittsburgh. Pittsburgh is not in Europe. <|db_entity|> Covidien <|db_relationship|> headquarters <|db_return|>Irish-headquartered<|db_end|> Irish-headquartered. Ireland is in Europe. </thinking> <answer> Covidien </answer>",
+      "golden_answer": ["Covidien"]
+    }
+  ]
+}

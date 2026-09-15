@@ -1,0 +1,71 @@
+# KBevo — evaluation configuration (paper §5).
+#
+# Authoritative source: the KBevo paper (arXiv:2608.26386, COLM 2026).
+# Values here match what `scripts/eval_kbevo.sh` runs when invoked with the
+# defaults.
+#
+# Canonical evaluation uses the two-phase agent: at inference time each
+# question drives (a) Phase-1 KB construction over the question's provided
+# passages, then (b) Phase-2 QA that queries the freshly-built KB via the
+# `<|db_*|>` tokens. No pre-built external corpus is required for the four
+# reported datasets.
+
+recipe_name: kbevo_two_phase_eval
+paper: https://arxiv.org/abs/2608.26386
+
+agent:
+  method: two_phase                  # see src/agent/two_phase_agent.py
+
+datasets:
+  # All four datasets are read via the shared `src/data/` loaders. Splits are
+  # the standard published dev / validation splits.
+  hotpotqa:
+    setting: distractor
+    split: validation
+  musique:
+    split: validation
+  2wiki:
+    split: validation
+  popqa:
+    split: validation
+
+seed: 42
+
+sampling:
+  temperature: 1.0                   # matches GRPO training sampling
+  top_p: 0.95
+  vllm_top_k: 4                      # inference-time top_k
+
+retrieval:
+  retrieval_top_k: 4                 # KB lookups per phase-2 turn
+  similarity_threshold: 0.6
+  use_inverses: true
+  return_triplets: false
+
+phase1:
+  phase1_prompt_type: sft            # same prompt used during SFT / GRPO
+
+generation:
+  max_tokens: 1024                   # per response
+  max_model_len: 4096                # vLLM context window
+
+batching:
+  batch_size: 64                     # inference batch (does not affect scores)
+  save_every: 64                     # incremental save cadence
+
+vllm:
+  gpu_memory_utilization: 0.6
+
+metrics:
+  primary:
+    - em                             # exact match (normalized)
+    - f1                             # token-level F1
+  computed_by: src/eval/evaluate.py
+
+runtime:                             # site-specific; not part of the scientific recipe
+  num_gpus: 1
+  wrapper_script: scripts/eval_kbevo.sh
+  wrapper_command: |
+    bash scripts/eval_kbevo.sh \
+        --model_path kilian-group/KBevo-Qwen3-1.7B-GRPO \
+        --datasets hotpotqa,musique,2wiki,popqa

@@ -1,0 +1,69 @@
+# KBevo — SFT configuration for Qwen3-4B (paper §5, Appendix B.1).
+#
+# Authoritative source: the KBevo paper (arXiv:2608.26386, COLM 2026),
+# Appendix B.1 "Training details". Values here match what
+# `scripts/train_sft.sh --model_size 4B` actually launches.
+
+recipe_name: kbevo_sft_qwen3_4b
+paper: https://arxiv.org/abs/2608.26386
+paper_section: "Appendix B.1"
+
+model:
+  base_model: Qwen/Qwen3-4B
+  initialized_from: Qwen/Qwen3-4B
+
+data:
+  dataset: hotpotqa
+  dataset_repo_hint: kilian-group/KBevo-SFT-hotpotqa-6k
+  train_examples: 11746
+  eval_examples: null
+  two_phase_supervision: true
+
+seed: 42
+
+optimizer:
+  learning_rate: 5.0e-5
+  weight_decay: 0.01
+  lr_scheduler_type: cosine
+  warmup_ratio: 0.1
+  max_grad_norm: 1.0
+
+batching:
+  per_device_train_batch_size: 8
+  gradient_accumulation_steps: 6
+  num_gpus_paper: 1
+  effective_batch_size: 48          # = 8 * 6 * 1
+
+epochs_or_steps:
+  num_train_epochs: 3
+  steps_per_epoch: 245
+  approx_total_steps: 735           # published GRPO init uses step 735 for 4B
+
+precision:
+  bf16: true
+  gradient_checkpointing: false     # paper Table 5: "–" for SFT (only GRPO enables it)
+
+sequence_lengths:
+  max_seq_length: 1024              # shorter than 1.7B due to activation memory at 4B
+
+tokenizer:
+  use_special_dblookup_tokens: true
+  plain_baseline: false
+
+logging_and_checkpointing:
+  logging_steps: 10
+  eval_strategy: epoch
+  save_strategy: steps
+  save_steps: 0.125
+  save_total_limit: 8
+  save_only_model: true
+
+runtime:
+  num_gpus: 1
+  wrapper_script: scripts/train_sft.sh
+  wrapper_command: "bash scripts/train_sft.sh --model_size 4B --dataset_path <path>"
+
+released_checkpoint:
+  hf_repo: kilian-group/KBevo-Qwen3-4B-SFT
+  precision: bfloat16
+  paper_reported_step: 735          # explicit — the released 4B SFT is the final ep3 step

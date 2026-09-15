@@ -1,0 +1,69 @@
+# KBevo main environment for SFT / GRPO / evaluation on 4 datasets.
+#
+#   conda env create -f environment.yml
+#   conda activate kbevo
+#
+# Notes:
+#   * torch is pinned to 2.8.0 with the CUDA 12.8 runtime — the pytorch.org
+#     wheel comes with the matching driver stubs; you do not need a system
+#     CUDA install.
+#   * vllm 0.10.2, verl 0.7.0, trl 0.26.2 are the exact versions the paper
+#     ran; they mutually pin transformers 4.57.x.
+#   * flash-attn is NOT required — the existing `mem` env runs everything
+#     without it. Install if you want faster attention on Ampere/Hopper
+#     ("pip install flash-attn --no-build-isolation" after this env is set up).
+#   * xformers 0.0.32 is version-matched to torch 2.8; do not bump one without
+#     the other.
+name: kbevo
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+      # --- core torch stack (CUDA 12.8) ---
+      - --extra-index-url https://download.pytorch.org/whl/cu128
+      - torch==2.8.0
+      - torchvision==0.23.0
+      - torchaudio==2.8.0
+      - xformers==0.0.32.post1
+
+      # --- Hugging Face + TRL + vLLM (paper-pinned versions) ---
+      - transformers==4.57.6
+      - trl==0.26.2
+      - verl==0.7.0
+      - vllm==0.10.2
+      - accelerate==1.10.1
+      - datasets==3.1.0
+      - peft==0.15.0
+      - sentencepiece==0.2.0
+
+      # --- training accelerators ---
+      - deepspeed==0.18.1
+      - bitsandbytes==0.45.3
+      - einops==0.8.0
+
+      # --- retrieval (dataset loaders + light FAISS on CPU) ---
+      - faiss-cpu
+      - sentence-transformers>=5.1
+
+      # --- dataset loaders + APIs ---
+      - openai>=1.0
+      - google-genai              # optional: Gemini-based data gen scripts
+      - hf_transfer==0.1.9
+
+      # --- observability ---
+      - wandb==0.25.0
+      - jsonschema==4.23.0
+      - pydantic==2.12.5
+      - pandas>=1.5
+      - tqdm>=4.65
+      - numpy>=1.26,<2.0
+
+      # --- misc runtime deps that some src/ modules import directly ---
+      - pyyaml>=6.0            # configs/paper YAML parser + wrappers
+      - nltk>=3.8              # tokenizer utilities used by src/eval/metrics.py
+      - matplotlib>=3.7        # used by a couple of analysis / debug scripts
+      - marisa-trie>=1.1       # prefix-sampling trie in src/multi_lmlm/training
+
+      # --- dev ---
